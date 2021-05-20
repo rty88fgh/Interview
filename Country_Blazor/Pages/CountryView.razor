@@ -1,16 +1,117 @@
 ﻿@page "/Country"
+@using System.Collections.ObjectModel
+@using Country_Blazor.Data
+@using System.Text.Json
+@using Country_Blazor.Component
 
-<h1>Counter</h1>
+@if (_allCountryInfo == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="container">
+        <div class="row">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Flag</th>
+                        <th>Name</th>
+                        <th>Alpha 2 Code</th>
+                        <th>Alpha 3 Code</th>
+                        <th>Native Name</th>
+                        <th>Alt Spellings</th>
+                        <th>Calling Codes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var country in _showCountryInfo)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/country/#"
+                                   class="btn btn-primary" @onclick="() => OnDetailSelected(country)"
+                                   data-toggle="modal"
+                                   data-target=".bd-example-modal-lg">Selected</a>
+                            </td>
+                            <td><input type="image" src="@country.Flag" style="display:table-cell;max-width:50px;"/></td>
+                            <td>@country.Name</td>
+                            <td>@country.Alpha2Code</td>
+                            <td>@country.Alpha3Code</td>
+                            <td>@country.NativeName</td>
+                            <td>
+                                @if (@country.AltSpellings.Count <= 1)
+                                {
+                                    @country.AltSpellings;
+                                }
+                                else
+                                {
+                                    @country.AltSpellings.Aggregate("", (orig, next) => orig + "," + next).Substring(1);
+                                }
+                            </td>
+                            <td>
+                                @if (@country.CallingCodes.Count <= 1)
+                                {
+                                    @country.CallingCodes.FirstOrDefault();
+                                }
+                                else
+                                {
+                                    @country.CallingCodes.Aggregate("", (orig, next) => orig + "," + next).Substring(1);
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    
+}
 
-<p>Current count: @currentCount</p>
+<Country_Blazor.Component.CountryDetailComponent @ref="_detailDialog"
+                                                 SelectedCountry="@_selectedCountry">
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+</Country_Blazor.Component.CountryDetailComponent>
 
 @code {
-    private int currentCount = 0;
+    private ObservableCollection<CountryInfo> _allCountryInfo;
+    private ObservableCollection<CountryInfo> _showCountryInfo;
+    private int _page = 1;
+    private CountryInfo _selectedCountry;
+    private bool _showDialog;
+    private CountryDetailComponent _detailDialog = new CountryDetailComponent();
 
-    private void IncrementCount()
+    protected override async Task OnInitializedAsync()
     {
-        currentCount++;
+        var client = new HttpClient();
+        var allCountryResponse = await client.GetAsync("https://restcountries.eu/rest/v2/all");
+        if (!allCountryResponse.IsSuccessStatusCode)
+            return;
+
+        var allCountryJson = await allCountryResponse.Content.ReadAsStringAsync();
+        if (string.IsNullOrEmpty(allCountryJson))
+            return;
+
+        var allCountries = JsonSerializer.Deserialize<IEnumerable<CountryInfo>>(allCountryJson, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+        _allCountryInfo = new ObservableCollection<CountryInfo>(allCountries.OrderBy(country => country.Name));
+        RenderPageData();
+    }
+
+    private void RenderPageData()
+    {
+        _showCountryInfo = new ObservableCollection<CountryInfo>(_allCountryInfo.Skip((_page - 1) * 25).Take(25));
+    }
+
+    private async void OnDetailSelected(CountryInfo country)
+    {
+        _selectedCountry = country;
+        if (!_detailDialog.ShowBackdrop)
+            await _detailDialog.OpenModal();
+        else
+            await _detailDialog.CloseModal();
+
     }
 }
+
