@@ -26,3 +26,4 @@ jobs:
       
     - name: Add .nojekyll file
       run: touch release/wwwroot/.nojekyll
+      
