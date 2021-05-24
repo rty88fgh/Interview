@@ -1,0 +1,93 @@
+﻿@using Country_Blazor_Wasm.Model
+<style>
+    .image {
+        display: inline-block;
+        
+    }
+
+    img {
+        vertical-align: middle;
+        max-width: 383px;
+    }
+</style>
+
+<div class="modal fade @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Country Detail</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="() => CloseModal()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            <div class="image">
+                                <img src="@SelectedCountry?.Flag" />
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="detail">
+                                <ul>
+                                    <li>Name:@SelectedCountry?.Name</li>
+                                    <li>Alpha2Code:@SelectedCountry?.Alpha2Code</li>
+                                    <li>Alpha3Code:@SelectedCountry?.Alpha3Code</li>
+                                    <li>Capital:@SelectedCountry?.Capital</li>
+                                    <li>Region:@SelectedCountry?.Region</li>
+                                    <li>Population:@SelectedCountry?.Population</li>
+                                    @if (SelectedCountry?.Timezones.Count == 1)
+                                    {
+                                        <li>Name:@SelectedCountry?.Timezones.FirstOrDefault()</li>
+                                    }
+                                    else
+                                    {
+                                        <li>Name:@SelectedCountry?.Timezones.Aggregate("", (orig, next) => orig + "," + next)</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="() => CloseModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (ShowBackdrop)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    public Guid Guid = Guid.NewGuid();
+    public string ModalDisplay = "none;";
+    public string ModalClass = "";
+    public bool ShowBackdrop = false;
+    [Parameter]
+    public CountryInfo SelectedCountry { get; set; }
+
+
+    public async Task OpenModal()
+    {
+        ModalDisplay = "block;";
+        await Task.Delay(100);//Delay allows bootstrap to perform nice fade animation
+        ModalClass = "show";
+        ShowBackdrop = true;
+        StateHasChanged();
+    }
+
+    public async Task CloseModal()
+    {
+        ModalClass = "";
+        await Task.Delay(250);
+        ModalDisplay = "none;";
+        ShowBackdrop = false;
+        StateHasChanged();
+    }
+
+}

@@ -1,0 +1,223 @@
+﻿@page "/"
+@using System.Collections.ObjectModel
+@using Country_Blazor_Wasm.Model
+@using System.Text.Json
+@using Country_Blazor_Wasm.Component
+@using Microsoft.AspNetCore.Components
+
+<style>
+    .searchDiv {
+        display: block;
+    }
+</style>
+
+
+@if (_allCountryInfo == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="searchDiv">
+        <label for="fname">Country:</label>
+        <input type="text" @bind="_searchStr" @oninput="(e) => RenderPageData(e.Value?.ToString())">
+    </div>
+    <div class="container">
+        <div class="row">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Flag</th>
+                        <th>Name</th>
+                        <th>Alpha 2 Code</th>
+                        <th>Alpha 3 Code</th>
+                        <th>Native Name</th>
+                        <th>Alt Spellings</th>
+                        <th>Calling Codes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var country in _showCountryInfo)
+                    {
+                        <tr>
+                            <td>
+                                <a href="#"
+                                   class="btn btn-primary"
+                                   @onclick="() => OnDetailSelected(country)"
+                                   data-toggle="modal"
+                                   data-target=".bd-example-modal-lg">Selected</a>
+                            </td>
+                            <td><input type="image" src="@country.Flag" style="display:table-cell;max-width:50px;" /></td>
+                            <td>@country.Name</td>
+                            <td>@country.Alpha2Code</td>
+                            <td>@country.Alpha3Code</td>
+                            <td>@country.NativeName</td>
+                            <td>
+                                @if (@country.AltSpellings.Count <= 1)
+                                {
+                                    @country.AltSpellings;
+                                }
+                                else
+                                {
+                                    @country.AltSpellings.Aggregate("", (orig, next) => orig + "," + next).Substring(1);
+                                }
+                            </td>
+                            <td>
+                                @if (@country.CallingCodes.Count <= 1)
+                                {
+                                    @country.CallingCodes.FirstOrDefault();
+                                }
+                                else
+                                {
+                                    @country.CallingCodes.Aggregate("", (orig, next) => orig + "," + next).Substring(1);
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            @if (_page == 1)
+            {
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">Previous</a>
+                </li>
+            }
+            else
+            {
+                <li class="page-item">
+                    <a class="page-link" href="#" tabindex="-1" @onclick="() => OnPageClick(_page -1)">Previous</a>
+                </li>
+            }
+            @if (_page <= 2)
+            {
+                @GenerateLi(1);
+
+                if (_lastPage >= 2)
+                    @GenerateLi(2);
+
+                    if (_lastPage >= 3)
+                        @GenerateLi(3);
+                    }
+                    else if (_page == _lastPage)
+                    {
+                        @GenerateLi(_lastPage - 2);
+                        @GenerateLi(_lastPage - 1);
+                        @GenerateLi(_lastPage);
+                    }
+                    else
+                    {
+                        @GenerateLi(_page - 1);
+                        @GenerateLi(_page);
+                        @GenerateLi(_page + 1);
+                    }
+
+            @if (_page == _lastPage)
+            {
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">Next</a>
+                </li>
+            }
+            else
+            {
+                <li class="page-item">
+                    <a class="page-link" href="#" tabindex="-1" @onclick="() => OnPageClick(_page + 1)">Next</a>
+                </li>
+            }
+        </ul>
+    </nav>
+
+
+}
+
+<Country_Blazor_Wasm.Component.CountryDetailComponent @ref="_detailDialog"
+                                                 SelectedCountry="@_selectedCountry">
+
+</Country_Blazor_Wasm.Component.CountryDetailComponent>
+
+@code {
+    private ObservableCollection<CountryInfo> _allCountryInfo;
+    private ObservableCollection<CountryInfo> _showCountryInfo;
+    private int _page = 1;
+    private CountryInfo _selectedCountry;
+    private bool _showDialog;
+    private CountryDetailComponent _detailDialog = new CountryDetailComponent();
+    private int _pageSize = 25;
+    private int _lastPage = 1;
+    private string _searchStr = "";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = new HttpClient();
+        var allCountryResponse = await client.GetAsync("https://restcountries.eu/rest/v2/all");
+        if (!allCountryResponse.IsSuccessStatusCode)
+            return;
+
+        var allCountryJson = await allCountryResponse.Content.ReadAsStringAsync();
+        if (string.IsNullOrEmpty(allCountryJson))
+            return;
+
+        var allCountries = JsonSerializer.Deserialize<IEnumerable<CountryInfo>>(allCountryJson, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+        _allCountryInfo = new ObservableCollection<CountryInfo>(allCountries.OrderBy(country => country.Name));
+
+        RenderPageData();
+    }
+
+    private void RenderPageData(string searchStr = null)
+    {
+        IEnumerable<CountryInfo> searchItems = _allCountryInfo;
+        if (!string.IsNullOrEmpty(searchStr) && !string.IsNullOrWhiteSpace(searchStr))
+            searchItems = searchItems.Where(country => country.Name.Contains(searchStr, StringComparison.OrdinalIgnoreCase));
+
+        _showCountryInfo = new ObservableCollection<CountryInfo>(searchItems.Skip((_page - 1) * _pageSize).Take(_pageSize));
+
+        _lastPage = (int)Math.Truncate(Math.Round((decimal)searchItems.Count() / _pageSize, MidpointRounding.ToPositiveInfinity));
+        StateHasChanged();
+    }
+
+    private async void OnDetailSelected(CountryInfo country)
+    {
+        _selectedCountry = country;
+        if (!_detailDialog.ShowBackdrop)
+            await _detailDialog.OpenModal();
+        else
+            await _detailDialog.CloseModal();
+
+    }
+
+    private void OnPageClick(int page)
+    {
+        _page = page;
+        RenderPageData(_searchStr);
+
+    }
+
+    private RenderFragment GenerateLi(int startPage)
+    {
+        @if (startPage == _page)
+        {
+            return@<li class="page-item active">
+        <a class="page-link" href="#" aria-current="page" @onclick="() => OnPageClick(startPage)"> @startPage</a>
+    </li>;
+}
+else
+{
+return@<li class="page-item">
+    <a class="page-link" href="#" @onclick="() => OnPageClick(startPage)"> @startPage</a>
+</li>;
+}
+
+
+
+
+    }
+
+
+}
+
+
