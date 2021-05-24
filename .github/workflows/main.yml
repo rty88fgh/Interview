@@ -14,6 +14,12 @@ jobs:
     - name: Publish .NET Core project
       run:  dotnet publish Country_Blazor_Wasm -c Release -o release --nologo
       
+    - name: Change base-tag in index.html from / to Interview
+      run: sed -i 's/<base href="\/" \/>/<base href="\/Interview\/" \/>/g' release/wwwroot/index.html
+      
+    - name: Add .nojekyll file
+      run: touch release/wwwroot/.nojekyll
+      
     - name: Commit wwwroot to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@4.1.3
       with:
@@ -21,9 +27,5 @@ jobs:
         BRANCH: InterviewCountry
         FOLDER: release/wwwroot
         
-    - name: Change base-tag in index.html from / to Interview
-      run: sed -i 's/<base href="\/" \/>/<base href="\/Interview\/" \/>/g' release/wwwroot/index.html
-      
-    - name: Add .nojekyll file
-      run: touch release/wwwroot/.nojekyll
+    
       
