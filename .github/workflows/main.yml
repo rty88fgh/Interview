@@ -20,3 +20,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         BRANCH: InterviewCountry
         FOLDER: release/wwwroot
+        
+    - name: Change base-tag in index.html from / to Interview
+      run: sed -i 's/<base href="\/" \/>/<base href="\/Interview\/" \/>/g' release/wwwroot/index.html
+      
+    - name: Add .nojekyll file
+      run: touch release/wwwroot/.nojekyll
