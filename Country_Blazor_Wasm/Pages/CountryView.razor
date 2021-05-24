@@ -20,7 +20,7 @@ else
 {
     <div class="searchDiv">
         <label for="fname">Country:</label>
-        <input type="text" @bind="_searchStr" @oninput="(e) => RenderPageData(e.Value?.ToString())">
+        <input type="text" @bind="_searchStr" @oninput="(e) => OnSearchTextChanged(e.Value?.ToString())">
     </div>
     <div class="container">
         <div class="row">
@@ -202,19 +202,21 @@ else
         @if (startPage == _page)
         {
             return@<li class="page-item active">
-        <a class="page-link" href="#" aria-current="page" @onclick="() => OnPageClick(startPage)"> @startPage</a>
-    </li>;
-}
-else
-{
-return@<li class="page-item">
-    <a class="page-link" href="#" @onclick="() => OnPageClick(startPage)"> @startPage</a>
-</li>;
-}
+                <a class="page-link" href="#" aria-current="page" @onclick="() => OnPageClick(startPage)"> @startPage</a>
+            </li>;
+        }
+        else
+        {
+            return@<li class="page-item">
+                <a class="page-link" href="#" @onclick="() => OnPageClick(startPage)"> @startPage</a>
+            </li>;
+        }
+    }
 
-
-
-
+    private void OnSearchTextChanged(string searchStr = null)
+    {
+        _page = 1;
+        RenderPageData(searchStr);
     }
 
 
