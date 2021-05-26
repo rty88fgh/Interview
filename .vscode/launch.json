@@ -1,0 +1,41 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Core Launch vue (web)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Country_Vue/bin/Debug/net5.0/Country_Vue.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart",
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "vuejs: chrome",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}/Country_Vue/ClientApp/src",
+            "breakOnLoad": true,
+            "sourceMapPathOverrides": {
+              "webpack:///src/*": "${webRoot}/*"
+            }
+          },
+
+    ]
+}
