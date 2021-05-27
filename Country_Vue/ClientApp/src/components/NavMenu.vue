@@ -14,15 +14,12 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse"
                      v-bind:class="{show: isExpanded}">
                     <ul class="navbar-nav flex-grow">
-                        <li class="nav-item">
-                            <router-link :to="{ name: 'Home' }" class="nav-link text-dark">Home</router-link>
-                        </li>
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <router-link :to="{ name: 'Counter' }" class="nav-link text-dark">Counter</router-link>
                         </li>
                         <li class="nav-item">
                             <router-link :to="{ name: 'FetchData' }" class="nav-link text-dark">Fetch Data</router-link>
-                        </li>
+                        </li> -->
                         <li class="nav-item">
                             <router-link :to="{ name: 'Country' }" class="nav-link text-dark">Country</router-link>
                         </li>
