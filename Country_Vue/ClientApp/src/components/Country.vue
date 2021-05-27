@@ -9,11 +9,10 @@
 
         <p v-if="!allCountries"><em>Loading...</em></p>
         <table class='table table-striped' aria-labelledby="tableLabel" v-if="allCountries">
-            <thead>
+            <thead >
                 <tr>
-                    <th></th>
                     <th>Flag</th>
-                    <th>Name</th>
+                    <th><a href="#" class="sort-by" @click="() => onNameColumnClick()"></a>Name</th>
                     <th>Alpha 2 Code</th>
                     <th>Alpha 3 Code</th>
                     <th>Native Name</th>
@@ -23,12 +22,8 @@
             </thead>
             <tbody>
                 <tr v-for="country of showCountries" v-bind:key="country">
-                    <td> <a href="#"
-                            class="btn btn-primary"
-                            data-toggle="modal"
-                            data-target=".bd-example-modal-lg">Selected</a></td>
-                    <td><input type="image" v-bind:src="country.flag" style="display:table-cell;max-width:50px;" /></td>
-                    <td>{{ country.name }}</td>
+                    <td><input type="image" v-bind:src="country.flag" class="imageInGrid"/></td>
+                    <td><a data-toggle="modal" data-target="#countryModal" @click="() => this.selectedCountry = country">{{ country.name }}</a></td>
                     <td>{{ country.alpha2Code }}</td>
                     <td>{{ country.alpha3Code }}</td>
                     <td>{{ country.nativeName }}</td>
@@ -83,7 +78,46 @@
                 </li>
             </ul>
         </nav>
-    </div>
+
+        <div class="modal fade" tabindex="-1" id="countryModal" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Country Detail</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="image">
+                                        <img :src="selectedCountry.flag" class="imageInModal" />
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="detail">
+                                        <ul>
+                                            <li>Name:{{ selectedCountry.name }}</li>
+                                            <li>Alpha2Code:{{ selectedCountry.alpha2Code }}</li>
+                                            <li>Alpha3Code:{{ selectedCountry.alpha3Code }}</li>
+                                            <li>Capital:{{ selectedCountry.capital }}</li>
+                                            <li>Region:{{ selectedCountry.region }}</li>
+                                            <li>Population:{{ selectedCountry.population }}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
 </template>
 
 
@@ -98,7 +132,9 @@
                 lastPage:Number,
                 pageSize:25,
                 searchStr:"",
-                page:1                
+                page:1,
+                selectedCountry : Object,
+                isSortAsc:true,
             }
         },
         methods: {
@@ -117,9 +153,12 @@
                 if(this.searchStr != undefined && this.searchStr.trim() == this.searchStr)
                     searchItems = searchItems.filter(country => country.name.toLowerCase().includes(this.searchStr.toLowerCase()));
 
-                console.log("================");
                 var startItemToGet = (this.page - 1) * this.pageSize;
-                this.showCountries = searchItems.slice(startItemToGet,startItemToGet + this.pageSize);
+                var isSortAsc = this.isSortAsc;
+                this.showCountries = searchItems.sort(function(a,b){
+                                                    return a.name.localeCompare(b.name) * (isSortAsc ? 1 : -1);
+                                                })
+                                                .slice(startItemToGet,startItemToGet + this.pageSize);
                 Math.ceil(searchItems.length / this.pageSize);
                 this.lastPage = Math.ceil(searchItems.length / this.pageSize);
             },           
@@ -127,13 +166,57 @@
                 console.log(clickPage);
                 this.page = clickPage;
                 this.renderPageData();
+            },
+            onNameColumnClick(){
+                this.isSortAsc = !this.isSortAsc;
+                this.renderPageData();
             }
+
         },
         counputed:{
-
         },
         mounted() {
             this.getAllCountry();
         }
     }
 </script>
+
+<style>
+    .imageInGrid {
+        display:inline;
+        max-width:50px;
+    }
+    .imageInModal{
+        
+        display:inline;
+        max-width:200px;
+    }
+    th a,
+    td a { 
+        display: block;
+        width: 100%;
+    }
+    th a.sort-by { 
+        padding-right: 18px;
+        position: relative;
+    }
+    a.sort-by:before,
+    a.sort-by:after {
+        border: 4px solid transparent;
+        content: "";
+        display: block;
+        height: 0;
+        right: 5px;
+        top: 50%;
+        position: absolute;
+        width: 0;
+    }
+    a.sort-by:before {
+        border-bottom-color: #666;
+        margin-top: -9px;
+    }
+    a.sort-by:after {
+        border-top-color: #666;
+        margin-top: 1px;
+    }
+</style>
